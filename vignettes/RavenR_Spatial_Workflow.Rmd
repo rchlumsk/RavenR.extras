@@ -1,7 +1,7 @@
 ---
 title: "RavenR Spatial Workflow"
 author: "Robert Chlumsky, Dr. James R. Craig, and Larry (Haobo) Liu"
-date: "May 12, 2021"
+date: "May 9, 2022"
 output: html_document
 urlcolor: blue
 vignette: >
@@ -22,6 +22,7 @@ This workflow will use some additional libraries that are not required for using
 
 ```{r load libraries, message=FALSE, warning=FALSE, results='hide'}
 library(RavenR)
+library(RavenR.extras)
 library(magick)
 library(gifski)
 library(ggplot2)
@@ -39,7 +40,7 @@ rvh <- rvn_rvh_read(system.file("extdata","Nith.rvh", package="RavenR"))
 head(rvh$SBtable)
 
 # create network plot of watershed structure from rvh file with labels
-rvn_subbasin_network_plot(rvh$SBtable, labeled=TRUE)
+rvn_rvh_subbasin_network_plot(rvh$SBtable, labeled=TRUE)
 ```
 
 This plot is relatively simple in the Nith, a simple configuration with four subbasins. However, we can also use the same tools to plot the network the Liard model (located in the Northwest Territories), which has more subbasins.
@@ -57,7 +58,7 @@ unzip("LiardRiverModel.zip", exdir="LiardRiverModel")
 rvh <- rvn_rvh_read("LiardRiverModel/Liard.rvh")
 
 # create the subbasin network plot
-rvn_subbasin_network_plot(rvh$SBtable, labeled=TRUE)
+rvn_rvh_subbasin_network_plot(rvh$SBtable, labeled=TRUE)
 ```
 
 ## Create a basic subbasin map
@@ -65,7 +66,7 @@ rvn_subbasin_network_plot(rvh$SBtable, labeled=TRUE)
 First, we create a basic map of the subbasin using simple tools within `ggplot2`. There are a number of ways to accomplish this, but here we use the `geom_sf` function to plot the subbasins and fill the colours based on subbasin ID.
 
 ```{r basic subbasin map only with ggplot}
-shpfilename <- system.file("extdata","Nith_shapefile_sample.shp",package="RavenR")
+shpfilename <- system.file("extdata","Nith_shapefile_sample.shp",package="RavenR.extras")
 shp <- sf::read_sf(shpfilename)
 
 # convert discrete variable into a factor for easy plotting
@@ -75,7 +76,7 @@ ggplot()+
   geom_sf(data=shp, aes(fill=subID))
 ```
 
-We can also plot custom output data to the subbasin map. The `RavenR` package has a function (\code\link{rvn_subbasin_map}}) to accomplish this, which uses the `geom_sf` function to create a plot after pre-processing the custom data to adjust the plot fill colours. 
+We can also plot custom output data to the subbasin map. The `RavenR.extras` package has a function (\code\link{rvn_subbasin_map}}) to accomplish this, which uses the `geom_sf` function to create a plot after pre-processing the custom data to adjust the plot fill colours. 
 
 ```{r basic map with custom output using the RavenR package}
 # Custom Output data from Raven for Nith basin
@@ -86,7 +87,7 @@ subIDcol <- 'subID' # attribute in shapefile with subbasin IDs
 plot.date <- "2003-03-30" # date for which to plot custom data
 
 # function call for a static image
-rvn_subbasin_map(shpfilename, subIDcol, plot.date, cust.data)+
+RavenR.extras::rvn_subbasin_map(shpfilename, subIDcol, plot.date, cust.data)+
   scale_fill_gradient(low='white', high='blue', limits=c(1, 10))
 ```
 
@@ -109,7 +110,7 @@ SBMap_animate <- function(shpfilename,subIDcol,plot.daterange,cust.data,
   plot.dates <- lubridate::date(cust.data[plot.daterange])
   for (i in seq(1,length(plot.dates))) {
     # png(file=paste0(rand.dir,"/",sprintf("plot_%02d.png",i)), width=500, height=500)
-    p1 <- RavenR::rvn_subbasin_map(shpfilename,subIDcol,plot.dates[i],cust.data)+
+    p1 <- RavenR.extras::rvn_subbasin_map(shpfilename,subIDcol,plot.dates[i],cust.data)+
       scale_fill_gradient(low='white', high='blue', limits=c(1, 10))+
                             ggtitle("Average PRECIP by Subbasin")
     ggsave(paste0(rand.dir,"/",sprintf("plot_%02d.png",i)),
@@ -221,7 +222,7 @@ library(geojsonio)
 library(rjson)
 
 ## read shapefile as sf and reproject into lat/long
-shp <- system.file("extdata","Nith_shapefile_sample.shp",package="RavenR") %>% 
+shp <- system.file("extdata","Nith_shapefile_sample.shp",package="RavenR.extras") %>% 
   sf::read_sf(.)
 
 # convert to lat/long coordinates
